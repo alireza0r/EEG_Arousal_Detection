@@ -200,3 +200,17 @@ if __name__ == '__main__':
   print(events.shape) 
   
   preprocess.CountTriggerInPath()
+
+
+def generate_latent(trainer, data_loader):
+  # All train latent code
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+  latent_code = []
+  for d_loader in data_loader:
+    trainer.model(d_loader.to(device))
+    latent_code.append(trainer.model.latent.detach().cpu().numpy())
+  latent = np.concatenate(latent_code, axis=0)
+
+  print(latent.shape)
+  return latent
