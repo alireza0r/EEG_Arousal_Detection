@@ -6,6 +6,32 @@ import numpy as np
 import mne
 import pandas as pd
 
+# from torch.nn.utils.rnn import pad_sequence, pack_sequence
+class MNEDataset(Dataset):
+  def __init__(self, data, transform=None):
+    self.data = data
+
+    self.mean = np.mean(data.get_data(), axis=-1)
+    self.mean = np.mean(self.mean, axis=0)
+
+    self.std = np.mean(data.get_data(), axis=-1)
+    self.std = np.mean(self.std, axis=0)
+
+    self.transform = transform
+
+  def __len__(self):
+    return self.data.get_data().shape[0]
+
+  def __getitem__(self, idx):
+    sample = self.data.get_data()[idx,]
+
+    if self.transform:
+      sample = self.transform(sample)
+
+    sample = MeanStdNormalize(axis=1)(eeg=sample)['eeg']
+
+    return torch.Tensor(sample)
+
 
 def load_ced_info(ced_path):
   # Read the .ced file into a pandas DataFrame
