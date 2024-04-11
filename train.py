@@ -62,7 +62,7 @@ if __name__ == '__main__':
   print(events.shape)
 
   print('Number of each Trigger:')
-  pint(preprocess.CountTriggerInPath())
+  print(preprocess.CountTriggerInPath())
 
   eeg_dataset = MNEDataset(epochs)
   data_length = eeg_dataset.data.get_data().shape
