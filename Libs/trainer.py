@@ -22,12 +22,12 @@ class Trainer(nn.Module):
     def forward(self, inputs):
         outputs = self.model(inputs)
         loss = self.criterion(outputs, inputs)
+        loss = loss.mean()
         return loss, outputs
 
     def train_step(self, inputs):
         self.optimizer.zero_grad()
         loss, outputs = self(inputs)
-        loss = loss.mean()
         loss.backward()
         self.optimizer.step()
         return loss.item(), outputs
