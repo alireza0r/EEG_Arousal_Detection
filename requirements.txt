@@ -1,3 +1,4 @@
 mne
 ced
 torcheeg
+tslearn
