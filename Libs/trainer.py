@@ -27,6 +27,7 @@ class Trainer(nn.Module):
     def train_step(self, inputs):
         self.optimizer.zero_grad()
         loss, outputs = self(inputs)
+        loss = loss.mean()
         loss.backward()
         self.optimizer.step()
         return loss.item(), outputs
