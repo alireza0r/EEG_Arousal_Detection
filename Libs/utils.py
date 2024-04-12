@@ -234,7 +234,7 @@ def generate_latent(trainer, data_loader):
 
   latent_code = []
   for d_loader in data_loader:
-    trainer.model(d_loader.to(device))
+    trainer.model(d_loader[0].to(device))
     latent_code.append(trainer.model.latent.detach().cpu().numpy())
   latent = np.concatenate(latent_code, axis=0)
 
