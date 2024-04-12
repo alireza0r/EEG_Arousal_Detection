@@ -40,7 +40,6 @@ class Trainer(nn.Module):
             total_train_loss = 0.0
             with tqdm(total=len(train_loader), desc="Train Batch |") as bar:
               for inputs in train_loader:
-                  print(inputs[0])
                   inputs = inputs[0].to(self.device)
                   train_loss, _ = self.train_step(inputs)
                   total_train_loss += train_loss
@@ -53,7 +52,6 @@ class Trainer(nn.Module):
             total_val_acc = 0.0
             with tqdm(total=len(val_loader), desc="Validate Batch |") as bar:
               for inputs in val_loader:
-                  print(inputs[0])
                   inputs = inputs[0].to(self.device)
                   val_loss, outputs = self.evaluate(inputs)
                   total_val_loss += val_loss
