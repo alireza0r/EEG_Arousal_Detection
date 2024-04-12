@@ -40,29 +40,32 @@ class Evaluator():
   def transform(self, x):
     return np.mean(x, axis=-1)
 
-  def display(self, signal, classes, true_classes):
+  def display(self, signal, classes, true_classes, extra_label=None):
     colors = list(mcolors.TABLEAU_COLORS.keys())
     e_len = signal.shape[-1]
     x = np.arange(signal.shape[0]*signal.shape[-1])
     fig, ax = plt.subplots(1,1, figsize=(15,10))
+    y_loc = signal[:,self.channel,:].mean()
+    y_min = signal[:,self.channel,:].min()
+    y_max = signal[:,self.channel,:].max()
     for i, (d, c, t_c) in enumerate(zip(signal, classes, true_classes)):
       if (i+1)==signal.shape[0]:
         break
 
       color = colors[c]
-      print(np.min(d[self.channel,:]))
-      print(np.max(d[self.channel,:]))
       ax.plot(x[i*e_len:(i+1)*e_len], d[self.channel,:], color=color)
       ax.axvline(x[i*e_len], linestyle='--')
-      # ax.text(x=x[i*e_len]+2, y=np.sin(i*np.pi/2)*8, s=f'{t_c}')
+      ax.text(x=x[i*e_len]+2, y=y_min, fontsize=10, s=f'{int(t_c[-1])}')
 
-    # ax.text(x=2, y=-90, s=f'Channel:{self.channel}')
-    print('ch')
-    # plt.tight_layout()
+      if extra_label:
+        ax.text(x=x[i*e_len]+2, y=y_min+0.005, fontsize=10, s=extra_label[i])
+
+    ax.text(x=2, y=y_max, s=f'Channel:{self.channel}')
+    plt.tight_layout()
     # plt.legend()
     plt.show()
 
-  def __call__(self, channel, start_epoch=None, num_epochs=None):
+  def __call__(self, channel, start_epoch=None, num_epochs=None, extra_label=None):
     if num_epochs:
       self.num_epochs = num_epochs
 
@@ -71,10 +74,6 @@ class Evaluator():
     latent = self.GenerateLatent(signal)
     latent = self.transform(latent)
     classes = self.cluster(latent)
-    print('Classes:')
+    print('Classes: ', end='')
     print(classes)
-    self.display(signal, classes, label)
-
-if __name__ == '__main__':
-  eval = Evaluator(trainer.model, KNN.predict, eeg_dataset, start_epoch=100, num_epochs=60)
-  eval(channel=0)
+    self.display(signal, classes, label, extra_label=extra_label)
