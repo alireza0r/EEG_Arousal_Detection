@@ -1,8 +1,6 @@
 from sklearn.cluster import DBSCAN
 import numpy as np
 
-def train_
-
 class DBSCAN:
   def __init__(self, eps=1, min_samples=5):
     self.eps = eps
