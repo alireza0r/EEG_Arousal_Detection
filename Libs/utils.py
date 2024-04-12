@@ -8,29 +8,46 @@ import pandas as pd
 
 # from torch.nn.utils.rnn import pad_sequence, pack_sequence
 class MNEDataset(Dataset):
-  def __init__(self, data, transform=None):
+  def __init__(self, data, transform=None, normalize=True):
+    super().__init__()
+
     self.data = data
 
-    self.mean = np.mean(data.get_data(), axis=-1)
-    self.mean = np.mean(self.mean, axis=0)
-
-    self.std = np.mean(data.get_data(), axis=-1)
-    self.std = np.mean(self.std, axis=0)
+    self.max = []
+    self.min = []
+    self.mean = []
+    self.std = []
+    for i in range(len(self.data.info['ch_names'])):
+      self.max.append(data.get_data(i).max())
+      self.min.append(data.get_data(i).min())
+      self.mean.append(data.get_data(i).mean())
+      self.std.append(data.get_data(i).std())
 
     self.transform = transform
+    self.normalize = normalize
+
+  def normal(self, data):
+    return (data - np.array(self.mean).reshape((len(self.mean), 1))) / np.array(self.std).reshape((len(self.std), 1))
 
   def __len__(self):
     return self.data.get_data().shape[0]
 
   def __getitem__(self, idx):
     sample = self.data.get_data()[idx,]
+    label = self.data.events[idx,]
 
     if self.transform:
       sample = self.transform(sample)
 
-    sample = MeanStdNormalize(axis=1)(eeg=sample)['eeg']
+    # sample = MeanStdNormalize(axis=0)(eeg=sample)['eeg']
 
-    return torch.Tensor(sample)
+    if self.normalize:
+      sample = self.normal(sample)
+
+    return torch.Tensor(sample), torch.Tensor(label)
+
+# eeg_dataset = MNEDataset(epochs)
+# data, label = eeg_dataset.__getitem__(np.arange(100,200))
 
 
 def load_ced_info(ced_path):
@@ -201,6 +218,20 @@ class EEGPreProcessing():
     return mne.concatenate_epochs(epochs_list), np.concatenate(events_list, axis=0)
 
 
+def generate_latent(trainer, data_loader):
+  # All train latent code
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+  latent_code = []
+  for d_loader in data_loader:
+    trainer.model(d_loader[0].to(device))
+    latent_code.append(trainer.model.latent.detach().cpu().numpy())
+  latent = np.concatenate(latent_code, axis=0)
+
+  print(latent.shape)
+  return latent
+
+
 if __name__ == '__main__':
   mne.set_log_level('WARNING')
 
@@ -226,17 +257,3 @@ if __name__ == '__main__':
   print(events.shape) 
   
   preprocess.CountTriggerInPath()
-
-
-def generate_latent(trainer, data_loader):
-  # All train latent code
-  device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-  latent_code = []
-  for d_loader in data_loader:
-    trainer.model(d_loader[0].to(device))
-    latent_code.append(trainer.model.latent.detach().cpu().numpy())
-  latent = np.concatenate(latent_code, axis=0)
-
-  print(latent.shape)
-  return latent
