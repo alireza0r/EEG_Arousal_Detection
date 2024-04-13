@@ -22,7 +22,7 @@ class Trainer(nn.Module):
     def forward(self, inputs):
         outputs = self.model(inputs)
         loss = self.criterion(outputs, inputs)
-        loss = loss.mean()
+        # loss = loss.mean()
         return loss, outputs
 
     def train_step(self, inputs):
