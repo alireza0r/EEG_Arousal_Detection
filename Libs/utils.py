@@ -110,7 +110,7 @@ class EEGPreProcessing():
 
   def Filtering(self, data, picks):
     # return data.filter(1, 45, picks=picks)
-    return data.filter(l_freq=None, h_freq=5) #, fir_design='firwin')
+    return data.filter(l_freq=None, h_freq=5, picks=picks) #, fir_design='firwin')
 
   def GenerateEvents(self, data, id=20, duration=5.5, stim_channel='TRIGGER', **arg):
     def find_overlap(events):
@@ -202,16 +202,18 @@ class EEGPreProcessing():
     for f in self.files_list:
       eeg_data = self.LoadFiles(f, self.info)
       print(eeg_data.get_data().shape)
-      raw = self.Filtering(eeg_data, picks=sig_picks)
+      # raw = self.Filtering(eeg_data, picks=sig_picks)
 
       events = self.GenerateEvents(eeg_data, duration=duration)
-      epochs = mne.Epochs(raw,
+      epochs = mne.Epochs(eeg_data,
                           events,
                           tmin=tmin,
                           tmax=tmax,
                           event_id=self.event_name,
                           preload=True,
                           picks=sig_picks)
+      
+      epochs = self.Filtering(epochs, picks=sig_picks)
 
       epochs_list.append(epochs)
       events_list.append(events)
