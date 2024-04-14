@@ -17,17 +17,17 @@ class AutoEncoder(nn.Module):
     self.EN_POOL = nn.MaxPool1d(pooling_kernel,pooling_stride, return_indices=True)
 
     conv = nn.Conv1d(in_ch, 64, 3, 1, padding='same')
-    act = nn.ReLU()
+    act = nn.Tanh()
     norm = nn.BatchNorm1d(64)
     self.EN_CNN1 = nn.Sequential(conv, act, norm)
 
     conv = nn.Conv1d(64, 128, 3, 1, padding='same')
-    act = nn.ReLU()
+    act = nn.Tanh()
     norm = nn.BatchNorm1d(128)
     self.EN_CNN2 = nn.Sequential(conv, act, norm)
 
     conv = nn.Conv1d(128, 256, 3, 1, padding='same')
-    act = nn.ReLU()
+    act = nn.Tanh()
     norm = nn.BatchNorm1d(256)
     self.EN_CNN3 = nn.Sequential(conv, act, norm)
 
@@ -35,22 +35,22 @@ class AutoEncoder(nn.Module):
     self.DE_POOL = nn.MaxUnpool1d(pooling_kernel,pooling_stride)
 
     conv = nn.ConvTranspose1d(256, 128, kernel_size=3, stride=1, padding=1)
-    act = nn.ReLU()
+    act = nn.Tanh()
     # up = nn.Upsample(scale_factor=2)
     norm = nn.BatchNorm1d(128)
     self.DE_CNN1 = nn.Sequential(conv, act, norm)
 
     conv = nn.ConvTranspose1d(128, 64, kernel_size=3, stride=1, padding=1)
-    act = nn.ReLU()
+    act = nn.Tanh()
     # up = nn.Upsample(scale_factor=2)
     norm = nn.BatchNorm1d(64)
     self.DE_CNN2 = nn.Sequential(conv, act, norm)
 
     conv = nn.ConvTranspose1d(64, in_ch, kernel_size=3, stride=1, padding=1)
-    # act = nn.ReLU()
+    act = nn.Tanh()
     # up = nn.Upsample(scale_factor=2)
     norm = nn.BatchNorm1d(in_ch)
-    self.DE_CNN3 = nn.Sequential(conv)#, act, norm)
+    self.DE_CNN3 = nn.Sequential(conv, act) #, norm)
 
     # Keep latent code
     self.latent = None
