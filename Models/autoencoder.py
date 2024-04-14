@@ -90,7 +90,7 @@ class AutoEncoder(nn.Module):
     x = self.Encoder(x)
     # print(0, 'Latent code size:', x.size())
     self.latent = x
-    x = self.Decoder(x)
+    x = self.Decoder(x) * 5.0
     # print(x.size())
     return x
 
