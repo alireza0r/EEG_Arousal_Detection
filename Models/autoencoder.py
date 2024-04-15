@@ -16,17 +16,17 @@ class AutoEncoder(nn.Module):
     pooling_stride = 4
     self.EN_POOL = nn.MaxPool1d(pooling_kernel,pooling_stride, return_indices=True)
 
-    conv = nn.Conv1d(in_ch, 64, 15, 1, padding='same')
+    conv = nn.Conv1d(in_ch, 64, 3, 1, padding='same')
     act = nn.Tanh()
     norm = nn.BatchNorm1d(64)
     self.EN_CNN1 = nn.Sequential(conv, act, norm)
 
-    conv = nn.Conv1d(64, 128, 10, 1, padding='same')
+    conv = nn.Conv1d(64, 128, 3, 1, padding='same')
     act = nn.Tanh()
     norm = nn.BatchNorm1d(128)
     self.EN_CNN2 = nn.Sequential(conv, act, norm)
 
-    conv = nn.Conv1d(128, 256, 5, 1, padding='same')
+    conv = nn.Conv1d(128, 256, 3, 1, padding='same')
     act = nn.Tanh()
     norm = nn.BatchNorm1d(256)
     self.EN_CNN3 = nn.Sequential(conv, act, norm)
@@ -34,19 +34,19 @@ class AutoEncoder(nn.Module):
     # Decoder structures
     self.DE_POOL = nn.MaxUnpool1d(pooling_kernel,pooling_stride)
 
-    conv = nn.ConvTranspose1d(256, 128, kernel_size=5, stride=1, padding=1)
+    conv = nn.ConvTranspose1d(256, 128, kernel_size=3, stride=1, padding=1)
     act = nn.Tanh()
     # up = nn.Upsample(scale_factor=2)
     norm = nn.BatchNorm1d(128)
     self.DE_CNN1 = nn.Sequential(conv, act, norm)
 
-    conv = nn.ConvTranspose1d(128, 64, kernel_size=10, stride=1, padding=1)
+    conv = nn.ConvTranspose1d(128, 64, kernel_size=3, stride=1, padding=1)
     act = nn.Tanh()
     # up = nn.Upsample(scale_factor=2)
     norm = nn.BatchNorm1d(64)
     self.DE_CNN2 = nn.Sequential(conv, act, norm)
 
-    conv = nn.ConvTranspose1d(64, in_ch, kernel_size=15, stride=1, padding=1)
+    conv = nn.ConvTranspose1d(64, in_ch, kernel_size=3, stride=1, padding=1)
     act = nn.Tanh()
     # up = nn.Upsample(scale_factor=2)
     norm = nn.BatchNorm1d(in_ch)
