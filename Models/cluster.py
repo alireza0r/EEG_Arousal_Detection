@@ -1,7 +1,7 @@
 from sklearn.cluster import DBSCAN
 import numpy as np
 
-class DBSCAN:
+class DBSCANCluster:
   def __init__(self, eps=1, min_samples=5):
     self.eps = eps
     self.min_samples = min_samples
@@ -27,7 +27,7 @@ class DBSCAN:
     return self.cluster.fit_predict(x)
 
 if __name__ == '__main__':
-  dcscan = DBSCAN()
+  dcscan = DBSCANCluster()
   dcscan.train(x)          # Train
   result = dcscan(x_test)  # Test
   print(result)
