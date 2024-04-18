@@ -2,3 +2,4 @@ mne
 ced
 torcheeg
 tslearn
+tqdm
