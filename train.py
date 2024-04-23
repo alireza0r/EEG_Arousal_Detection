@@ -121,7 +121,8 @@ if __name__ == '__main__':
   parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.0008, type=float)
   parser.add_argument('--epochs', metavar='int', required=False, help='Number of epochs.', default=200, type=int)
   parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=8, type=int)
-  parser.add_argument('--valid_split', metavar='int', required=False, help='Batch size.', default=8, type=int)
+  parser.add_argument('--valid_split', metavar='float', required=False, help='Validation set.', default=0.2, type=float)
+  parser.add_argument('--seed', metavar='int', required=False, help='Seed', default=42, type=int)
   parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='', type=str)
   args = parser.parse_args()
 
