@@ -17,8 +17,9 @@ import warnings
 mne.set_log_level('WARNING')
 
 import argparse
+from time import time
   
-def train_classification_model(args, dataloader):
+def train_classification_model(args, dataloader, validation_loader):
   model = EEGNet(num_classes=1)
   loss_fn = nn.MSELoss()
 
@@ -26,6 +27,7 @@ def train_classification_model(args, dataloader):
 
   # Iterate through the dataloader
   for epoch in range(args.epochs):
+    start_time = time()
     for batch_idx, (inputs, labels) in enumerate(dataloader):
       # inputs = inputs.unsqueeze(1)
       # inputs = inputs.permute(0, 2, 1)
@@ -38,12 +40,22 @@ def train_classification_model(args, dataloader):
       loss.backward()
       optimizer.step()
 
-    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
+    loss_list = []
+    for batch_idx, (inputs, labels) in enumerate(validation_loader):
+      # inputs = inputs.unsqueeze(1)
+      # inputs = inputs.permute(0, 2, 1)
+      outputs = model(inputs)
+      loss = loss_fn(outputs, labels)
+      loss_list.append(loss.item())
+      # print(loss)
+      # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
+      
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Valid Loss: {loss_list.mean():.3f}, Time: {time()-start_time:.3f} Sec.')
 
   torch.save(model.state_dict(), args.save+'.pth')
 
 
-def auto_encoder_model(args, dataloader):
+def auto_encoder_model(args, dataloader, validation_loader):
   info = load_ced_info('/content/MyDrive/MyDrive/Code_AR/DataVisualization/channellocation_32ch.ced')
   # print(info['ch_names'])
   
@@ -102,14 +114,15 @@ def auto_encoder_model(args, dataloader):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Train AutoEncoder and Classification model')
 
-  parser.add_argument('--m', metavar='name', required=True, help='Model kind to train.', default='Classification')
-  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).')
-  parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=1)
-  parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=45)
-  parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.0008)
-  parser.add_argument('--epochs', metavar='int', required=False, help='Number of epochs.', default=200)
-  parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=200)
-  parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='')
+  parser.add_argument('--m', metavar='name', required=True, help='Model kind to train.', default='Classification', type=str)
+  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).', type=str)
+  parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=45, type=int)
+  parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=1, type=int)
+  parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.0008, type=float)
+  parser.add_argument('--epochs', metavar='int', required=False, help='Number of epochs.', default=200, type=int)
+  parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=8, type=int)
+  parser.add_argument('--valid_split', metavar='int', required=False, help='Batch size.', default=8, type=int)
+  parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='', type=str)
   args = parser.parse_args()
 
   # Load dataset
@@ -134,9 +147,21 @@ if __name__ == '__main__':
   # Use DataLoader to shuffle and batch the data
   batch_size = args.batch
   shuffle = True
-  dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+  indices = list(range(dataset.size))
+  if args.seed:
+    np.random.seed(args.seed)
+  np.random.shuffle(indices)
+  split = int(np.floor(args.valid_split * dataset.size))
+  train_indices, val_indices = indices[split:], indices[:split]
+  
+  train_sampler = SubsetRandomSampler(train_indices)
+  valid_sampler = SubsetRandomSampler(val_indices)
+  # dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, )
+  train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
+  validation_loader = DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
 
   if args.m == 'Classification':
-    train_classification_model(args, dataloader)
+    train_classification_model(args, train_loader, validation_loader)
   elif args.m == 'AutoEncoder':
-    auto_encoder_model(args, dataloader)
+    auto_encoder_model(args, train_loader, validation_loader)
