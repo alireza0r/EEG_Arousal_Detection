@@ -20,7 +20,11 @@ import argparse
 from time import time
   
 def train_classification_model(args, dataloader, validation_loader):
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
   model = EEGNet(num_classes=1)
+  model.to(device)
+
   loss_fn = nn.MSELoss()
 
   optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -31,8 +35,8 @@ def train_classification_model(args, dataloader, validation_loader):
     for batch_idx, (inputs, labels) in enumerate(dataloader):
       # inputs = inputs.unsqueeze(1)
       # inputs = inputs.permute(0, 2, 1)
-      outputs = model(inputs)
-      loss = loss_fn(outputs, labels)
+      outputs = model(inputs.to(device))
+      loss = loss_fn(outputs, labels.to(device))
       # print(loss)
       # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
 
@@ -44,8 +48,8 @@ def train_classification_model(args, dataloader, validation_loader):
     for batch_idx, (inputs, labels) in enumerate(validation_loader):
       # inputs = inputs.unsqueeze(1)
       # inputs = inputs.permute(0, 2, 1)
-      outputs = model(inputs)
-      loss = loss_fn(outputs, labels)
+      outputs = model(inputs.to(device))
+      loss = loss_fn(outputs, labels.to(device))
       loss_list.append(loss.item())
       # print(loss)
       # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
@@ -118,7 +122,7 @@ if __name__ == '__main__':
   parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).', type=str)
   parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=45, type=int)
   parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=1, type=int)
-  parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.0008, type=float)
+  parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.001, type=float)
   parser.add_argument('--epochs', metavar='int', required=False, help='Number of epochs.', default=200, type=int)
   parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=8, type=int)
   parser.add_argument('--valid_split', metavar='float', required=False, help='Validation set.', default=0.2, type=float)
