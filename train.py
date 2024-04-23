@@ -1,6 +1,7 @@
 from Libs.trainer import *
 from Libs.utils import *
 from Models.autoencoder import *
+from Models.classification import *
 from ExternalLibs.sdtw_cuda_loss import *
 
 from tslearn.metrics import SoftDTWLossPyTorch
@@ -15,34 +16,34 @@ from torch.utils.data.sampler import SubsetRandomSampler
 import warnings
 mne.set_log_level('WARNING')
 
-# from torch.nn.utils.rnn import pad_sequence, pack_sequence
-class MNEDataset(Dataset):
-  def __init__(self, data, transform=None):
-    self.data = data
+import argparse
+  
+def train_classification_model(args, dataloader):
+  model = EEGNet(num_classes=1)
+  loss_fn = nn.MSELoss()
 
-    self.mean = np.mean(data.get_data(), axis=-1)
-    self.mean = np.mean(self.mean, axis=0)
+  optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    self.std = np.mean(data.get_data(), axis=-1)
-    self.std = np.mean(self.std, axis=0)
+  # Iterate through the dataloader
+  for epoch in range(args.epochs):
+    for batch_idx, (inputs, labels) in enumerate(dataloader):
+      # inputs = inputs.unsqueeze(1)
+      # inputs = inputs.permute(0, 2, 1)
+      outputs = model(inputs)
+      loss = loss_fn(outputs, labels)
+      # print(loss)
+      # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
 
-    self.transform = transform
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
 
-  def __len__(self):
-    return self.data.get_data().shape[0]
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
 
-  def __getitem__(self, idx):
-    sample = self.data.get_data()[idx,]
-
-    if self.transform:
-      sample = self.transform(sample)
-
-    sample = MeanStdNormalize(axis=1)(eeg=sample)['eeg']
-    
-    return torch.Tensor(sample)
+  torch.save(model.state_dict(), args.save+'.pth')
 
 
-if __name__ == '__main__':
+def auto_encoder_model(args, dataloader):
   info = load_ced_info('/content/MyDrive/MyDrive/Code_AR/DataVisualization/channellocation_32ch.ced')
   # print(info['ch_names'])
   
@@ -64,9 +65,9 @@ if __name__ == '__main__':
   print('Number of each Trigger:')
   print(preprocess.CountTriggerInPath())
 
-  eeg_dataset = MNEDataset(epochs)
+  # eeg_dataset = MNEDataset(epochs)
+  eeg_dataset = EEGDataset(epochs)
   data_length = eeg_dataset.data.get_data().shape
-
   
   warnings.filterwarnings("ignore", ".*copy=False will change to copy=True in 1.7*")
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -96,3 +97,46 @@ if __name__ == '__main__':
   trainer.train(train_loader=train_loader,
                 val_loader=valid_loader,
                 num_epochs=100,)
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(description='Train AutoEncoder and Classification model')
+
+  parser.add_argument('--m', metavar='name', required=True, help='Model kind to train.', default='Classification')
+  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).')
+  parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=1)
+  parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=45)
+  parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.0008)
+  parser.add_argument('--epochs', metavar='int', required=False, help='Number of epochs.', default=200)
+  parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=200)
+  parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='')
+  args = parser.parse_args()
+
+  # Load dataset
+  train_set = mne.read_epochs(args.datapath)
+  ch = train_set.info['ch_names'][:-2]
+  train_set.filter(l_freq=args.l, h_freq=args.h, picks=ch)
+  train_features = mne.time_frequency.EpochsSpectrum(train_set, 
+                                                     method='multitaper', 
+                                                     fmin=0, 
+                                                     fmax=args.h*2, 
+                                                     tmin=0, 
+                                                     tmax=9.998, 
+                                                     picks=ch, 
+                                                     proj=False, 
+                                                     exclude='bads', 
+                                                     n_jobs=2, 
+                                                     remove_dc=True)
+
+  dataset = EEGDatasetV2(data=train_features.get_data(),
+                      label=train_features.events[:,-1])
+
+  # Use DataLoader to shuffle and batch the data
+  batch_size = args.batch
+  shuffle = True
+  dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+  if args.m == 'Classification':
+    train_classification_model(args, dataloader)
+  elif args.m == 'AutoEncoder':
+    auto_encoder_model(args, dataloader)
