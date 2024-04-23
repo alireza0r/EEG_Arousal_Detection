@@ -50,7 +50,7 @@ def train_classification_model(args, dataloader, validation_loader):
       # print(loss)
       # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
       
-    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Valid Loss: {loss_list.mean():.3f}, Time: {time()-start_time:.3f} Sec.')
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Valid Loss: {np.mean(loss_list):.3f}, Time: {time()-start_time:.3f} Sec.')
 
   torch.save(model.state_dict(), args.save+'.pth')
 
