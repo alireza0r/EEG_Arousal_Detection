@@ -18,16 +18,14 @@ mne.set_log_level('WARNING')
 import argparse
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='Train AutoEncoder and Classification model')
+  parser = argparse.ArgumentParser(description='Evaluate AutoEncoder and Classification model')
 
-  parser.add_argument('--m', metavar='name', required=True, help='Model kind to train.', default='Classification')
-  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).')
-  parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=1)
-  parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=45)
-  parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.0008)
-  parser.add_argument('--epochs', metavar='int', required=False, help='Number of epochs.', default=200)
-  parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=200)
-  parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='')
+  parser.add_argument('--m', metavar='name', required=True, help='Model kind to train.', default='Classification', type=str)
+  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).', type=str)
+  parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=45, type=int)
+  parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=1, type=int)
+  parser.add_argument('--batch', metavar='int', required=False, help='Batch size.', default=16, type=int)
+  parser.add_argument('--load', metavar='path', required=True, help='Path for load trained model weights.', default='', type=str)
   args = parser.parse_args()
 
   # Load dataset
@@ -55,15 +53,20 @@ if __name__ == '__main__':
   dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
   if args.m == 'Classification':
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = EEGNet(num_classes=1)
+    model.load_state_dict(torch.load(args.load))
+    model.to(device)
+    model.eval()
+
     loss_fn = nn.MSELoss()
     loss_list = []
 
     for batch_idx, (inputs, labels) in enumerate(dataloader):
       # inputs = inputs.unsqueeze(1)
       # inputs = inputs.permute(0, 2, 1)
-      outputs = model(inputs)
-      loss = loss_fn(outputs, labels)
+      outputs = model(inputs.to(device))
+      loss = loss_fn(outputs, labels.to(device))
       # print(loss)
       # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
 

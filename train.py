@@ -32,6 +32,7 @@ def train_classification_model(args, dataloader, validation_loader):
   # Iterate through the dataloader
   for epoch in range(args.epochs):
     start_time = time()
+    model.train()
     for batch_idx, (inputs, labels) in enumerate(dataloader):
       # inputs = inputs.unsqueeze(1)
       # inputs = inputs.permute(0, 2, 1)
@@ -44,6 +45,7 @@ def train_classification_model(args, dataloader, validation_loader):
       loss.backward()
       optimizer.step()
 
+    model.eval()
     loss_list = []
     for batch_idx, (inputs, labels) in enumerate(validation_loader):
       # inputs = inputs.unsqueeze(1)
