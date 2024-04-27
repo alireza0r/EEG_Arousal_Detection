@@ -19,13 +19,13 @@ mne.set_log_level('WARNING')
 import argparse
 from time import time
   
-def train_classification_model(args, dataloader, validation_loader):
+def train_classification_model(args, dataloader, validation_loader, loss_fn=nn.MSELoss()):
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
   model = EEGNet(num_classes=1)
   model.to(device)
 
-  loss_fn = nn.MSELoss()
+  # loss_fn = nn.MSELoss()
 
   optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
