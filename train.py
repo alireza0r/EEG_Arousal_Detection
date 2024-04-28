@@ -18,8 +18,20 @@ mne.set_log_level('WARNING')
 
 import argparse
 from time import time
+
+def r2_score_loss(y_true, y_pred):
+    # Calculate the residual sum of squares
+    rss = torch.sum((y_true - y_pred)**2)
+    
+    # Calculate the total sum of squares
+    tss = torch.sum((y_true - torch.mean(y_true))**2)
+    
+    # Calculate the R2 score
+    r2 = 1 - (rss / tss)
+    
+    return r2
   
-def train_classification_model(args, dataloader, validation_loader, loss_fn=nn.MSELoss()):
+def train_classification_model(args, dataloader, validation_loader, loss_fn):
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
   model = EEGNet(num_classes=1)
@@ -130,6 +142,7 @@ if __name__ == '__main__':
   parser.add_argument('--valid_split', metavar='float', required=False, help='Validation set.', default=0.2, type=float)
   parser.add_argument('--seed', metavar='int', required=False, help='Seed', default=42, type=int)
   parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='', type=str)
+  parser.add_argument('--loss', metavar='name', required=False, help='Lass function name', default='MSE', type=str)
   args = parser.parse_args()
 
   # Load dataset
@@ -168,7 +181,11 @@ if __name__ == '__main__':
   train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
   validation_loader = DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
 
+  loss_fn = nn.MSELoss() if args.loss == 'MSE' else None
+  loss_fn = r2_score_loss if args.loss == 'R2' else None
+  assert loss_fn != None
+
   if args.m == 'Classification':
-    train_classification_model(args, train_loader, validation_loader)
+    train_classification_model(args, train_loader, validation_loader, loss_fn)
   elif args.m == 'AutoEncoder':
     auto_encoder_model(args, train_loader, validation_loader)
