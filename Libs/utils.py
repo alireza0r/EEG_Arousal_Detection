@@ -17,16 +17,21 @@ from torcheeg.transforms import MeanStdNormalize
 # from torch.utils.data.sampler import SubsetRandomSampler
 
 class EEGDatasetV2(Dataset):
-    def __init__(self, data, label):
+    def __init__(self, data, label, transform=None):
         self.size = data.shape[0]
         self.data = data
         self.labels = label
+        self.transform = transform
 
     def __len__(self):
         return self.size
 
     def __getitem__(self, idx):
-        return torch.FloatTensor(np.log(self.data[idx])), torch.FloatTensor([self.labels[idx]])
+        if self.transform:
+            d = self.transform(self.data[idx])
+            return torch.FloatTensor(d), torch.FloatTensor([self.labels[idx]])
+        else:           
+            return torch.FloatTensor(self.data[idx]), torch.FloatTensor([self.labels[idx]])
 
 # from torch.nn.utils.rnn import pad_sequence, pack_sequence
 class EEGDataset(Dataset):
