@@ -19,6 +19,23 @@ mne.set_log_level('WARNING')
 import argparse
 from time import time
 
+def stft_transform(fs, window_length, overlap):
+    window_size = int(window_length * fs)
+    overlap_size = int(window_size * overlap)
+    def stft(eeg_signal):
+      if len(eeg_signal.shape) == 2:
+        sxx_list = []
+        for ch in range(eeg_signal.shape[0]):
+          f, t, Sxx = spectrogram(eeg_signal[ch,:], fs=fs, window='hamming', nperseg=window_size, noverlap=overlap_size)
+          sxx_list.append(Sxx)
+          # print(sxx_list)
+
+        Sxx = np.stack(sxx_list, axis=0)
+      else:
+        f, t, Sxx = spectrogram(eeg_signal, fs=fs, window='hamming', nperseg=window_size, noverlap=overlap_size)
+      return 20*np.log10(Sxx)
+    return stft
+
 def r2_score_loss(y_true, y_pred):
     # Calculate the residual sum of squares
     rss = torch.sum((y_true - y_pred)**2)
@@ -143,6 +160,9 @@ if __name__ == '__main__':
   parser.add_argument('--seed', metavar='int', required=False, help='Seed', default=42, type=int)
   parser.add_argument('--save', metavar='path', required=False, help='Path to save trained model weights', default='', type=str)
   parser.add_argument('--loss', metavar='name', required=False, help='Lass function name', default='MSE', type=str)
+  parser.add_argument('--feature', metavar='name', required=False, help='Feature extraction mode', default='STFT', type=str)
+  parser.add_argument('--winlen', metavar='value', required=False, help='window length in second', default=0.5, type=float)
+  parser.add_argument('--overlap', metavar='value', required=False, help='Overlap lenght in second', default=0.25, type=float)
   args = parser.parse_args()
 
   # Load dataset
@@ -161,8 +181,13 @@ if __name__ == '__main__':
                                                      n_jobs=2, 
                                                      remove_dc=True)
 
+
+  transform = None
+  if args.feature == 'STFT:
+    transform = stft_transform(fs=512, window_length=args.winlen, overlap=args.overlap)
   dataset = EEGDatasetV2(data=train_features.get_data(),
-                      label=train_features.events[:,-1])
+                      label=train_features.events[:,-1],
+                      transform=transform)
 
   # Use DataLoader to shuffle and batch the data
   batch_size = args.batch
