@@ -169,18 +169,18 @@ if __name__ == '__main__':
   train_set = mne.read_epochs(args.datapath)
   ch = train_set.info['ch_names'][:-2]
   train_set.filter(l_freq=args.l, h_freq=args.h, picks=ch)
-  train_features = mne.time_frequency.EpochsSpectrum(train_set, 
-                                                     method='multitaper', 
-                                                     fmin=0, 
-                                                     fmax=args.h*2, 
-                                                     tmin=0, 
-                                                     tmax=9.998, 
-                                                     picks=ch, 
-                                                     proj=False, 
-                                                     exclude='bads', 
-                                                     n_jobs=2, 
-                                                     remove_dc=True)
-
+  # train_features = mne.time_frequency.EpochsSpectrum(train_set, 
+  #                                                    method='multitaper', 
+  #                                                    fmin=0, 
+  #                                                    fmax=args.h*2, 
+  #                                                    tmin=0, 
+  #                                                    tmax=9.998, 
+  #                                                    picks=ch, 
+  #                                                    proj=False, 
+  #                                                    exclude='bads', 
+  #                                                    n_jobs=2, 
+  #                                                    remove_dc=True)
+  train_features = train_set.copy()
 
   transform = None
   if args.feature == 'STFT:
