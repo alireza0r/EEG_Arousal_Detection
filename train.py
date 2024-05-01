@@ -243,7 +243,7 @@ if __name__ == '__main__':
   transform = None
   if args.feature == 'STFT':
     transform = stft_transform(fs=512, window_length=args.winlen, overlap=args.overlap)
-  dataset = EEGDatasetV2(data=train_features.get_data(),
+  dataset = EEGDatasetV2(data=train_features.get_data()[:,:32,:],
                       label=train_features.events[:,-1],
                       transform=transform)
 
