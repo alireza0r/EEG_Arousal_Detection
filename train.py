@@ -23,6 +23,9 @@ from scipy.signal import spectrogram
 
   
 def training(args, dataloader, validation_loader, loss_fn, model):
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+  print('Device:', device)
+  
   optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
   # Iterate through the dataloader
