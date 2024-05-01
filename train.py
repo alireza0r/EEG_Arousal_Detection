@@ -3,6 +3,7 @@ from Libs.utils import *
 from Models.autoencoder import *
 from Models.classification import *
 from ExternalLibs.sdtw_cuda_loss import *
+from Libs.layers import AvgGlobalPool2d, MaxGlobalPool2d, ModelFromJson
 
 from tslearn.metrics import SoftDTWLossPyTorch
 import torch
@@ -18,6 +19,7 @@ mne.set_log_level('WARNING')
 
 import argparse
 from time import time
+
   
 def training(args, dataloader, validation_loader, loss_fn, model):
   optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
