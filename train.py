@@ -18,6 +18,45 @@ mne.set_log_level('WARNING')
 
 import argparse
 from time import time
+  
+def training(args, dataloader, validation_loader, loss_fn, model):
+  optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+
+  # Iterate through the dataloader
+  for epoch in range(args.epochs):
+    start_time = time()
+    model.train()
+    train_loss_list = []
+    for batch_idx, (inputs, labels) in enumerate(dataloader):
+      # inputs = inputs.unsqueeze(1)
+      # inputs = inputs.permute(0, 2, 1)
+      outputs = model(inputs.to(device))
+      loss = loss_fn(outputs, labels.to(device))
+      train_loss_list.append(loss.item())
+      # print(loss)
+      # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
+
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+
+    model.eval()
+    loss_list = []
+    r2_list = []
+    for batch_idx, (inputs, labels) in enumerate(validation_loader):
+      # inputs = inputs.unsqueeze(1)
+      # inputs = inputs.permute(0, 2, 1)
+      outputs = model(inputs.to(device))
+      val_loss = loss_fn(outputs, labels.to(device))
+      r2 = r2_score_loss(outputs, labels.to(device))
+      loss_list.append(val_loss.item())
+      r2_list.append(r2.item())
+      # print(loss)
+      # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
+      
+    print(f'Epoch {epoch+1}, Loss: {np.mean(train_loss_list):.3f}, Valid Loss: {np.mean(loss_list):.3f}, R2 Valid: {np.mean(r2_list):.3f}, Time: {time()-start_time:.3f} Sec.')
+
+  torch.save(model.state_dict(), args.save+'.pth')
 
 def stft_transform(fs, window_length, overlap):
     window_size = int(window_length * fs)
@@ -36,7 +75,7 @@ def stft_transform(fs, window_length, overlap):
       return 20*np.log10(Sxx)
     return stft
 
-def r2_score_loss(y_true, y_pred):
+def r2_score_loss(y_pred, y_true):
     # Calculate the residual sum of squares
     rss = torch.sum((y_true - y_pred)**2)
     
@@ -47,6 +86,15 @@ def r2_score_loss(y_true, y_pred):
     r2 = 1 - (rss / tss)
     
     return r2
+
+def model_v2(args, dataloader, validation_loader, loss_fn):
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+  print('Device:', device)
+
+  model = ModelFromJson(args.modelcon).Config()
+  model.to(device)
+
+  training(args, dataloader, validation_loader, loss_fn, model)
   
 def train_classification_model(args, dataloader, validation_loader, loss_fn):
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -54,40 +102,42 @@ def train_classification_model(args, dataloader, validation_loader, loss_fn):
   model = EEGNet(num_classes=1)
   model.to(device)
 
+  training(args, dataloader, validation_loader, loss_fn, model)
+
   # loss_fn = nn.MSELoss()
 
-  optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+  # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-  # Iterate through the dataloader
-  for epoch in range(args.epochs):
-    start_time = time()
-    model.train()
-    for batch_idx, (inputs, labels) in enumerate(dataloader):
-      # inputs = inputs.unsqueeze(1)
-      # inputs = inputs.permute(0, 2, 1)
-      outputs = model(inputs.to(device))
-      loss = loss_fn(outputs, labels.to(device))
-      # print(loss)
-      # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
+  # # Iterate through the dataloader
+  # for epoch in range(args.epochs):
+  #   start_time = time()
+  #   model.train()
+  #   for batch_idx, (inputs, labels) in enumerate(dataloader):
+  #     # inputs = inputs.unsqueeze(1)
+  #     # inputs = inputs.permute(0, 2, 1)
+  #     outputs = model(inputs.to(device))
+  #     loss = loss_fn(outputs, labels.to(device))
+  #     # print(loss)
+  #     # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
 
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
+  #     optimizer.zero_grad()
+  #     loss.backward()
+  #     optimizer.step()
 
-    model.eval()
-    loss_list = []
-    for batch_idx, (inputs, labels) in enumerate(validation_loader):
-      # inputs = inputs.unsqueeze(1)
-      # inputs = inputs.permute(0, 2, 1)
-      outputs = model(inputs.to(device))
-      loss = loss_fn(outputs, labels.to(device))
-      loss_list.append(loss.item())
-      # print(loss)
-      # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
+  #   model.eval()
+  #   loss_list = []
+  #   for batch_idx, (inputs, labels) in enumerate(validation_loader):
+  #     # inputs = inputs.unsqueeze(1)
+  #     # inputs = inputs.permute(0, 2, 1)
+  #     outputs = model(inputs.to(device))
+  #     loss = loss_fn(outputs, labels.to(device))
+  #     loss_list.append(loss.item())
+  #     # print(loss)
+  #     # print(f"Batch {batch_idx + 1}, Loss: {loss.item()}")
       
-    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Valid Loss: {np.mean(loss_list):.3f}, Time: {time()-start_time:.3f} Sec.')
+  #   print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Valid Loss: {np.mean(loss_list):.3f}, Time: {time()-start_time:.3f} Sec.')
 
-  torch.save(model.state_dict(), args.save+'.pth')
+  # torch.save(model.state_dict(), args.save+'.pth')
 
 
 def auto_encoder_model(args, dataloader, validation_loader):
@@ -163,6 +213,8 @@ if __name__ == '__main__':
   parser.add_argument('--feature', metavar='name', required=False, help='Feature extraction mode', default='STFT', type=str)
   parser.add_argument('--winlen', metavar='value', required=False, help='window length in second', default=0.5, type=float)
   parser.add_argument('--overlap', metavar='value', required=False, help='Overlap lenght in second', default=0.25, type=float)
+  parser.add_argument('--modelcon', metavar='path', required=False, help='YAML file to load into the model', default='./config.yaml', type=str)
+  
   args = parser.parse_args()
 
   # Load dataset
@@ -183,7 +235,7 @@ if __name__ == '__main__':
   train_features = train_set.copy()
 
   transform = None
-  if args.feature == 'STFT:
+  if args.feature == 'STFT':
     transform = stft_transform(fs=512, window_length=args.winlen, overlap=args.overlap)
   dataset = EEGDatasetV2(data=train_features.get_data(),
                       label=train_features.events[:,-1],
@@ -206,11 +258,21 @@ if __name__ == '__main__':
   train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
   validation_loader = DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
 
-  loss_fn = nn.MSELoss() if args.loss == 'MSE' else None
-  loss_fn = r2_score_loss if args.loss == 'R2' else None
-  assert loss_fn != None
+  # loss_fn = nn.MSELoss() if args.loss == 'MSE' else None
+  # loss_fn = r2_score_loss if args.loss == 'R2' else None
+  # assert loss_fn != None
+
+  if args.loss == 'MSE':
+    loss_fn = nn.MSELoss()
+  elif args.loss == 'R2':
+    loss_fn = r2_score_loss
+  else:
+    raise Exception('Unknown Loss function')
+    
 
   if args.m == 'Classification':
     train_classification_model(args, train_loader, validation_loader, loss_fn)
   elif args.m == 'AutoEncoder':
     auto_encoder_model(args, train_loader, validation_loader)
+  if args.m == 'Modelv2':
+    model_v2(args, train_loader, validation_loader, loss_fn)
