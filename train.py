@@ -19,6 +19,7 @@ mne.set_log_level('WARNING')
 
 import argparse
 from time import time
+from scipy.signal import spectrogram
 
   
 def training(args, dataloader, validation_loader, loss_fn, model):
