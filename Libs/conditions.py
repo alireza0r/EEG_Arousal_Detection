@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(description ='Load csv info for spliter')
 parser.add_argument('--path', 
                     metavar='path', 
                     type=int, 
-                    defult='/content/MyDrive/MyDrive/data/full_details_last_modified.csv')
+                    default='/content/MyDrive/MyDrive/data/full_details_last_modified.csv')
 
 args = parser.parse_args()
 
