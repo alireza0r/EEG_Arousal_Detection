@@ -457,7 +457,7 @@ class EEGPreProcessingV2():
     return events, labels, indexs
 
 
-  def __call__(self, tmin, tmax, duration=5.5, sig_picks=None):
+  def __call__(self, tmin, tmax, duration=5.5, sig_picks=None, labelkeys=['excitation']):
     epochs_list, events_list = [], []
     full_vote_label = {}
     for f in self.files_list:
@@ -471,7 +471,7 @@ class EEGPreProcessingV2():
       if len(data_split)==0:
         print('There were not any data on', f)
         continue
-      events, _, _ = self.GenerateEventsFromCSV(data_split, )
+      events, _, _ = self.GenerateEventsFromCSV(data_split, labelkeys=labelkeys)
 
       epochs = mne.Epochs(eeg_data,
                           events,
