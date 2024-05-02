@@ -46,7 +46,9 @@ class ModelFromJson:
 
   def LoadWeight(self, path):
     assert self.model != None, print('Unknown model')
-    self.model.load_state_dict(torch.load(path))
+    # self.model.load_state_dict(torch.load(path))
+    self.model.load_state_dict(torch.load(path, map_location=torch.device(self.device)))
+
     self.model.eval()
     return self.model
     
