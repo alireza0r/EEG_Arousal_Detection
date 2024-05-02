@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.io import loadmat
 import os
 # from Libs.utils import csv_spliter
-from Libs.utils import *
+from utils import *
 from Metadata import conditions
 import argparse
 
