@@ -4,7 +4,7 @@ from utils import csv_spliter
 
 parser = argparse.ArgumentParser(description ='Load csv info for spliter')
 
-parser.add_argument('--path', 
+parser.add_argument('--pathcsv', 
                     metavar='path', 
                     type=str, 
                     default='/content/MyDrive/MyDrive/data/full_details_last_modified.csv')
