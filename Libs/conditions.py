@@ -2,16 +2,19 @@ import argparse
 import pandas as pd
 from utils import csv_spliter
 
-parser = argparse.ArgumentParser(description ='Load csv info for spliter')
+# parser = argparse.ArgumentParser(description ='Load csv info for spliter')
 
-parser.add_argument('--pathcsv', 
-                    metavar='path', 
-                    type=str, 
-                    default='/content/MyDrive/MyDrive/data/full_details_last_modified.csv')
+# parser.add_argument('--pathcsv', 
+#                     metavar='path', 
+#                     type=str, 
+#                     default='/content/MyDrive/MyDrive/data/full_details_last_modified.csv')
 
-args = parser.parse_args()
+# args = parser.parse_args()
 
-with open(args.pathcsv, 'r') as f:
+# with open(args.pathcsv, 'r') as f:
+#   df = pd.read_csv(f, index_col=0)
+
+with open('/content/MyDrive/MyDrive/data/full_details_last_modified.csv', 'r') as f:
   df = pd.read_csv(f, index_col=0)
 
 # TEST
