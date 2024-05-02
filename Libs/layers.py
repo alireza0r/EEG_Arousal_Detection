@@ -22,6 +22,8 @@ class ModelFromJson:
   def __init__(self, config_path):
     self.config_path = config_path
     self.config = self.LoadModel(config_path)
+    self.model = None
+    self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
   def LoadModel(self, config_path):
     with open(config_path, 'r') as f:
@@ -38,4 +40,13 @@ class ModelFromJson:
       parameters = {key: value for key, value in list(l.items())[1:]}
       layer = layer_type(**parameters)
       layers.append(layer)
-    return nn.Sequential(*layers)
+    self.model = nn.Sequential(*layers)
+    self.model.to(self.device)
+    return self.model
+
+  def LoadWeight(self, path):
+    assert self.model != None, print('Unknown model')
+    self.model.load_state_dict(torch.load(path))
+    self.model.eval()
+    return self.model
+    
