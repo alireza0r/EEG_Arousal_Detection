@@ -11,7 +11,7 @@ parser.add_argument('--pathcsv',
 
 args = parser.parse_args()
 
-with open(args.path, 'r') as f:
+with open(args.pathcsv, 'r') as f:
   df = pd.read_csv(f, index_col=0)
 
 # TEST
