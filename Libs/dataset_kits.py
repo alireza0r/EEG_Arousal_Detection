@@ -84,7 +84,7 @@ if __name__=='__main__':
                       metavar='path', 
                       type=str, 
                       help='Path to save the .npz files.',
-                      default='/content/')
+                      default='./')
   
   args = parser.parse_args()
   
