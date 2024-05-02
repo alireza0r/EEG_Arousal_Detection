@@ -79,7 +79,7 @@ if __name__=='__main__':
                       metavar='path', 
                       type=str, 
                       help='Path to save the .npz files.',
-                      default='/content/MyDrive/MyDrive/data/full_details_last_modified.csv')
+                      default='/content/MyDrive/MyDrive/data/')
   
   args = parser.parse_args()
   
