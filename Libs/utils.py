@@ -16,6 +16,15 @@ from torcheeg.transforms import MeanStdNormalize
 # import torch
 # from torch.utils.data.sampler import SubsetRandomSampler
 
+def csv_spliter(csv, condictions):
+  new_csv = csv.copy()
+  for k, v in zip(condictions.keys(), condictions.values()):
+    if v == '':
+      continue
+    new_csv = new_csv[new_csv[k]==v].copy()
+  print(f'New csv size: {new_csv.shape}')
+  return new_csv
+
 class EEGDatasetV2(Dataset):
     def __init__(self, data, label, transform=None):
         self.size = data.shape[0]
