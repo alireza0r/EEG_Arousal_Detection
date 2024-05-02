@@ -5,7 +5,7 @@ from scipy.io import loadmat
 import os
 # from Libs.utils import csv_spliter
 from utils import *
-from ..Metadata import conditions
+from ..Metadata.conditions import *
 import argparse
 
 # Create and Split dataset into sub datasets
@@ -83,7 +83,7 @@ if __name__=='__main__':
   args = parser.parse_args()
   
   
-  for s, n in zip(conditions.split_list, conditions.conditions):
+  for s, n in zip(split_list, conditions):
     name = ''
     for k, v in zip(n.keys(), n.values()):
       if v == 'control ':
