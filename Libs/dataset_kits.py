@@ -1,11 +1,11 @@
-import os
-print(os.getcwd())
+# import os
+# print(os.getcwd())
 import pandas as pd
 from scipy.io import loadmat
 import os
 # from Libs.utils import csv_spliter
 from utils import *
-from Metadata import conditions
+from ..Metadata import conditions
 import argparse
 
 # Create and Split dataset into sub datasets
