@@ -92,7 +92,7 @@ if __name__=='__main__':
       else:
         vv = v
       name += k+'_'+vv+'-'
-    res = dataset_spliter(s, root=root)
+    res = dataset_spliter(s, root=args.path)
     np.savez(os.path.join(args.path, name+'.npz'), data=res[0], label=res[1])
     print(name+'.npy', 'was saved')
     del res
