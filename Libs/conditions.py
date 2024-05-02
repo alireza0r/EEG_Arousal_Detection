@@ -1,5 +1,6 @@
 import argparse
 import pandas as pd
+from utils import csv_spliter
 
 parser = argparse.ArgumentParser(description ='Load csv info for spliter')
 
