@@ -7,6 +7,7 @@ import os
 from utils import *
 import conditions
 import argparse
+import numpy as np
 
 # Create and Split dataset into sub datasets
 def dataset_spliter(df, root, duration=10, overlap=0.5, sr=512):
@@ -91,7 +92,7 @@ if __name__=='__main__':
       else:
         vv = v
       name += k+'_'+vv+'-'
-    res = dataset(s, root=root)
+    res = dataset_spliter(s, root=root)
     np.savez(os.path.join(args.path, name+'.npz'), data=res[0], label=res[1])
     print(name+'.npy', 'was saved')
     del res
