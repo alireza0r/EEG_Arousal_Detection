@@ -21,6 +21,8 @@ import argparse
 from time import time
 from scipy.signal import spectrogram
 
+import os
+
   
 def training(args, dataloader, validation_loader, loss_fn, model):
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -206,7 +208,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Train AutoEncoder and Classification model')
 
   parser.add_argument('--m', metavar='name', required=True, help='Model kind to train.', default='Classification', type=str)
-  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file).', type=str)
+  parser.add_argument('--datapath', metavar='path', required=True, help='EEG Epochs path (*-epo.fif file) or .npz data path for pre processing.', type=str)
   parser.add_argument('--h', metavar='Hz', required=False, help='High cut-off frequency for filter.', default=45, type=int)
   parser.add_argument('--l', metavar='Hz', required=False, help='Low cut-off frequency for filter.', default=1, type=int)
   parser.add_argument('--lr', metavar='float', required=False, help='Learning rate.', default=0.001, type=float)
@@ -220,13 +222,58 @@ if __name__ == '__main__':
   parser.add_argument('--winlen', metavar='value', required=False, help='window length in second', default=0.5, type=float)
   parser.add_argument('--overlap', metavar='value', required=False, help='Overlap lenght in second', default=0.25, type=float)
   parser.add_argument('--modelcon', metavar='path', required=False, help='YAML file to load into the model', default='./config.yaml', type=str)
+  parser.add_argument('--p', metavar='mode', required=False, help='Prepare data when it is not initialized as MNE epochs.', action='store_true')
+  parser.add_argument('--condition', metavar='name', required=False, help='Conditions that .npz files should have to process.', default='', type=str)
   
   args = parser.parse_args()
 
   # Load dataset
-  train_set = mne.read_epochs(args.datapath)
-  ch = train_set.info['ch_names'][:-2]
-  train_set.filter(l_freq=args.l, h_freq=args.h, picks=ch)
+  if not args.p: 
+    print('Load MNE structured dataset')
+    train_set = mne.read_epochs(args.datapath)
+    ch = train_set.info['ch_names'][:-2]
+    train_set.filter(l_freq=args.l, h_freq=args.h, picks=ch)
+    train_features = train_set.copy()
+
+    transform = None
+    if args.feature == 'STFT':
+      transform = stft_transform(fs=512, window_length=args.winlen, overlap=args.overlap)
+    dataset = EEGDatasetV2(data=train_features.get_data()[:,:32,:],
+                        label=train_features.events[:,-1],
+                        transform=transform)
+
+  else:
+    print('Preparing data')
+    data_list = []
+    label_list = []
+    for filename in os.listdir(args.datapath):
+      if not (args.condition in filename):
+        continue
+        
+      if filename.endswith(".npz"):  # Assuming data files are .npz files
+          # Load the data
+          data = np.load(os.path.join(data_folder, filename))
+          data_array = data['data']
+          label_array = data['label'][:,1].astype('float')
+          label_list.append(label_array)
+  
+          # Dataset
+          data = mne.filter.filter_data(data=data_array, l_freq=1, h_freq=45, sfreq=512)
+          data_list.append(data)
+
+    data_list = np.concatenate(data_list, axis=0)
+    label_list = np.concatenate(label_list, axis=0)
+    
+    transform = None
+    if args.feature == 'STFT':
+      transform = stft_transform(fs=512, window_length=args.winlen, overlap=args.overlap)
+    dataset = EEGDatasetV2(data=data_list,
+                        label=label_list,
+                        transform=transform)
+
+    print('Data prepared')
+    print(f'Data shape: {data_list.shape}, Label shape: {label_list.shape}')
+    
   # train_features = mne.time_frequency.EpochsSpectrum(train_set, 
   #                                                    method='multitaper', 
   #                                                    fmin=0, 
@@ -238,14 +285,9 @@ if __name__ == '__main__':
   #                                                    exclude='bads', 
   #                                                    n_jobs=2, 
   #                                                    remove_dc=True)
-  train_features = train_set.copy()
+  # train_features = train_set.copy()
 
-  transform = None
-  if args.feature == 'STFT':
-    transform = stft_transform(fs=512, window_length=args.winlen, overlap=args.overlap)
-  dataset = EEGDatasetV2(data=train_features.get_data()[:,:32,:],
-                      label=train_features.events[:,-1],
-                      transform=transform)
+  
 
   # Use DataLoader to shuffle and batch the data
   batch_size = args.batch
