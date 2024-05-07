@@ -222,7 +222,7 @@ if __name__ == '__main__':
   parser.add_argument('--winlen', metavar='value', required=False, help='window length in second', default=0.5, type=float)
   parser.add_argument('--overlap', metavar='value', required=False, help='Overlap lenght in second', default=0.25, type=float)
   parser.add_argument('--modelcon', metavar='path', required=False, help='YAML file to load into the model', default='./config.yaml', type=str)
-  parser.add_argument('--p', metavar='mode', required=False, help='Prepare data when it is not initialized as MNE epochs.', action='store_true')
+  parser.add_argument('--p', required=False, help='Prepare data when it is not initialized as MNE epochs.', action='store_true')
   parser.add_argument('--condition', metavar='name', required=False, help='Conditions that .npz files should have to process.', default='', type=str)
   
   args = parser.parse_args()
