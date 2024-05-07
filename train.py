@@ -252,7 +252,7 @@ if __name__ == '__main__':
         
       if filename.endswith(".npz"):  # Assuming data files are .npz files
           # Load the data
-          data = np.load(os.path.join(data_folder, filename))
+          data = np.load(os.path.join(args.datapath, filename))
           data_array = data['data']
           label_array = data['label'][:,1].astype('float')
           label_list.append(label_array)
