@@ -14,8 +14,9 @@ from utils import csv_spliter
 # with open(args.pathcsv, 'r') as f:
 #   df = pd.read_csv(f, index_col=0)
 
-with open('/content/MyDrive/MyDrive/data/full_details_last_modified.csv', 'r') as f:
+with open('/content/MyDrive/MyDrive/data/full_details_last (3).csv', 'r') as f:
   df = pd.read_csv(f, index_col=0)
+print('/content/MyDrive/MyDrive/data/full_details_last (3).csv', 'was loaded.')
 
 # TEST
 split1 = {'CT-GD':'control ', 'Group':'test', 'Type':'BCI', 'Level':'EASY'}
