@@ -99,6 +99,7 @@ if __name__=='__main__':
         vv = v
       name += k+'_'+vv+'-'
     res = dataset_spliter(s, root=args.path)
+    print(res[0].shape, res[1].shape)
     np.savez_compressed(os.path.join(args.save, name+'.npz'), data=res[0], label=res[1])
     print(name+'.npy', 'was saved')
     del res
