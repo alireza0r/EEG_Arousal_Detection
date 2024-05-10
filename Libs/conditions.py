@@ -64,7 +64,6 @@ df_s77 = csv_spliter(df, split77)
 df_s88 = csv_spliter(df, split88)
 
 split_list = [df_s1,
-              df_s1,
               df_s2,
               df_s3,
               df_s4,
