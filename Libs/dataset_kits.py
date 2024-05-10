@@ -25,9 +25,10 @@ def dataset_spliter(df, root, duration=10, overlap=0.5, sr=512):
   epoch_list = []
   label_list = []
   # Step 3: Iterate through data, segment into epochs with overlap, and filter based on labels
-  for path, start, valence, arousal, dominance, sub_name, ct_gd, hints, group, t, level in zip(
+  for path, start, stop, valence, arousal, dominance, sub_name, ct_gd, hints, group, t, level in zip(
     file_paths,
     df['StartSample'],
+    df['StopSample'],
     df['Valence'],
     df['Arousal'],
     df['Dominance'],
@@ -44,7 +45,7 @@ def dataset_spliter(df, root, duration=10, overlap=0.5, sr=512):
         mat_data = loadmat(p)
       last_path = path
 
-      signal = mat_data['data'][:32, 0,:]  # Extract first 32 channels
+      signal = mat_data['data'][:32, 0, start:stop]  # Extract first 32 channels
 
       # Iterate through the signal with overlap and segment into epochs
       i = start
