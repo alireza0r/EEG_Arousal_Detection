@@ -89,7 +89,7 @@ if __name__=='__main__':
   
   args = parser.parse_args()
   
-  
+  full_data = []
   for s, n in zip(conditions.split_list, conditions.conditions):
     name = ''
     for k, v in zip(n.keys(), n.values()):
@@ -100,6 +100,11 @@ if __name__=='__main__':
       name += k+'_'+vv+'-'
     res = dataset_spliter(s, root=args.path)
     print(res[0].shape, res[1].shape)
-    np.savez_compressed(os.path.join(args.save, name+'.npz'), data=res[0], label=res[1])
-    print(name+'.npy', 'was saved')
-    del res
+    if args.save != '':
+      np.savez_compressed(os.path.join(args.save, name+'.npz'), data=res[0], label=res[1])
+      print(name+'.npy', 'was saved')
+      del res
+    else:
+      full_data.append(res)
+
+  return full_data
