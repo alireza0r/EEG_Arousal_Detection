@@ -106,5 +106,3 @@ if __name__=='__main__':
       del res
     else:
       full_data.append(res)
-
-  return full_data
