@@ -10,7 +10,7 @@ import argparse
 import numpy as np
 
 # Create and Split dataset into sub datasets
-def dataset_spliter(df, root, duration=10, overlap=0.5, sr=512):
+def dataset_spliter(df, root, duration=30, overlap=0.1, sr=512):
   # Step 2: Extract file paths
   file_paths = df['Name'].tolist()
 
